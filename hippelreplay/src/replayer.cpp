@@ -124,6 +124,7 @@ void Replayer::do_row() {
 	row_event_.read = true;
 	row_event_.pos = pos_;
 	row_event_.row = row_;
+	row_event_.speed = count_;
 	for (int n = 0; n < m_.voices; n++) {
 		Voice &v = v_[n];
 		const TrackEntry t = m_.track(pos_, n);

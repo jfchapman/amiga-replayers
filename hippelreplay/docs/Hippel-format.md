@@ -396,6 +396,8 @@ The volume of the tick it's read on becomes volume × (*L* − *r*) / 256, where
 
 A subsong plays its track rows from first to last and goes back to the first. It plays once only if it reaches a sound transpose of $80 (§5.1). The end test is that the next track row equals last + 1, so entries whose last row is before their first never loop and run on through whatever follows: they aren't real subsongs. Speed 0 stops the song where it starts, so those entries are silence.
 
+Some entries only play part of another subsong, such as *Wings of Death*'s title song's last track row. HippelReplay tells them by the rows they play and each row's speed, which the track rows' speed commands can change on the way.
+
 Because rows run in order, a song's loop point is simply the first row that's read a second time.
 
 ---

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <new>
+#include <utility>
 #include <vector>
 
 #include "mixer.h"
@@ -30,6 +31,8 @@ struct Subsong {
 	double seconds = -1, loop_seconds = -1;  // the same as times
 	bool looped = false;
 	bool audible = false;
+	int repeat_of = -1;
+	std::vector<std::pair<int, int>> rows;  // what it plays: track row * 256 + row, and speed; sorted
 };
 
 // Plays a song without sound and finds where it starts repeating: the first row read a second
@@ -70,6 +73,7 @@ Subsong analyse(const hippel::Module &m, int number) {
 				break;
 			}
 			first = t;
+			s.rows.push_back({e.pos * 256 + e.row, e.speed});
 		}
 		for (const hippel::VoiceOut &o : out)
 			if (o.active && o.trigger) {
@@ -80,7 +84,29 @@ Subsong analyse(const hippel::Module &m, int number) {
 	}
 	s.audible = !starts.empty();
 	s.looped = s.loop_tick >= 0 && s.audible && starts.back() >= s.loop_tick;
+	std::sort(s.rows.begin(), s.rows.end());
 	return s;
+}
+
+// Finds the subsongs whose music is all in another: the same rows, at the same speed. The longest of
+// them is the one kept.
+void find_repeats(std::vector<Subsong> &subsongs) {
+	std::vector<size_t> order;
+	for (size_t i = 0; i < subsongs.size(); i++)
+		if (subsongs[i].ticks >= 0)
+			order.push_back(i);
+	std::stable_sort(order.begin(), order.end(),
+	                 [&](size_t a, size_t b) { return subsongs[a].rows.size() > subsongs[b].rows.size(); });
+	std::vector<size_t> kept;
+	for (size_t i : order) {
+		for (size_t k : kept)
+			if (std::includes(subsongs[k].rows.begin(), subsongs[k].rows.end(), subsongs[i].rows.begin(), subsongs[i].rows.end())) {
+				subsongs[i].repeat_of = int(k);
+				break;
+			}
+		if (subsongs[i].repeat_of < 0)
+			kept.push_back(i);
+	}
 }
 
 }  // namespace
@@ -244,6 +270,7 @@ hippel_module *hippel_open(const void *data, size_t size, const hippel_settings 
 			if (sub.audible)
 				m->subsongs.push_back(sub);
 		}
+		find_repeats(m->subsongs);
 		if (m->subsongs.empty()) {
 			delete m;
 			err = HIPPEL_ERROR_FORMAT;
@@ -281,6 +308,16 @@ const char *hippel_format(const hippel_module *m) {
 
 const char *hippel_replayer_name(const hippel_module *m) { return m ? m->song.build.c_str() : ""; }
 
+int hippel_voice_count(const hippel_module *m) { return m ? m->song.voices : 0; }
+
+int hippel_default_subsong(const hippel_module *m) {
+	int best = 0;
+	for (int i = 1; m && i < int(m->subsongs.size()); i++)
+		if (m->subsongs[size_t(i)].seconds > m->subsongs[size_t(best)].seconds && m->subsongs[size_t(i)].repeat_of < 0)
+			best = i;
+	return best;
+}
+
 int hippel_sample_count(const hippel_module *m) { return m ? int(m->song.samples.size()) : 0; }
 
 const char *hippel_sample_name(const hippel_module *m, int sample) {
@@ -300,6 +337,7 @@ int hippel_get_subsong_info(const hippel_module *m, int index, hippel_subsong_in
 	info->loop_start = s.loop_seconds;
 	info->loop_length = s.loop_tick < 0 ? 0 : s.seconds - s.loop_seconds;
 	info->looped = s.looped ? 1 : 0;
+	info->repeat_of = s.repeat_of;
 	return 0;
 }
 

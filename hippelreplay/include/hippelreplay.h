@@ -137,6 +137,9 @@ HIPPEL_API void hippel_close(hippel_module *module);
 HIPPEL_API const char *hippel_format(const hippel_module *module);
 HIPPEL_API const char *hippel_replayer_name(const hippel_module *module);
 
+/* Number of voices in the song: 4, or 7 (four of them mixed in software). */
+HIPPEL_API int hippel_voice_count(const hippel_module *module);
+
 /* Number of samples, and the name of sample 0 and up: "" for COSO songs (which have no names) or a number out of range. */
 HIPPEL_API int hippel_sample_count(const hippel_module *module);
 HIPPEL_API const char *hippel_sample_name(const hippel_module *module, int sample);
@@ -151,10 +154,14 @@ typedef struct hippel_subsong_info {
 	double loop_length; /* seconds from loop_start to the end of the play-through, 0 if it doesn't loop */
 	int looped;         /* 1 if the song is heard to loop. Other songs stop at the end of a play-through,
 	                       whatever loop_count and fade_seconds say */
+	int repeat_of;      /* the index of a subsong that plays all this one's music too, or -1 */
 } hippel_subsong_info;
 
 /* Fills info for a subsong. Returns 0 on success. */
 HIPPEL_API int hippel_get_subsong_info(const hippel_module *module, int index, hippel_subsong_info *info);
+
+/* The subsong to play when only one will do: the longest. */
+HIPPEL_API int hippel_default_subsong(const hippel_module *module);
 
 /*
  * Playing length of a subsong in seconds with the current settings: one play-through, plus

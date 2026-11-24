@@ -117,8 +117,9 @@ int main(int argc, char **argv) {
 		for (i = 0; i < n; i++) {
 			hippel_subsong_info info;
 			hippel_get_subsong_info(m, i, &info);
-			printf("  %d: number %d, %.2f s, loop from %.2f s (%.2f s)%s\n", i, info.number, info.duration,
-			       info.loop_start, info.loop_length, info.looped ? ", looped" : "");
+			printf("  %d: number %d, %.2f s, loop from %.2f s (%.2f s)%s%s\n", i, info.number, info.duration,
+			       info.loop_start, info.loop_length, info.looped ? ", looped" : "",
+			       info.repeat_of >= 0 ? ", repeats another" : "");
 		}
 		hippel_close(m);
 		return 0;

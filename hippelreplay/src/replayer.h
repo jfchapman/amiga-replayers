@@ -37,6 +37,7 @@ public:
 	struct RowEvent {
 		bool read = false;
 		int pos = 0, row = 0;
+		int speed = 0;  // ticks this row lasts
 	};
 	const RowEvent &last_row() const { return row_event_; }
 	bool stopped() const { return stopped_; }

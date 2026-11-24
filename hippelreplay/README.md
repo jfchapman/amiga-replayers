@@ -10,8 +10,8 @@ Death*, *Lethal Xcess*, *Enchanted Land*, *A Prehistoric Tale*, *Dragonflight* a
   (`.hipc`) files. Songs with 4 voices, or with 7, four of which are mixed in software as the original
   does.
 - The different replayer generations, detected from the song or chosen.
-- Subsongs, with lengths and loop points, seeking, and sample names. Tells songs that loop from ones
-  that stop.
+- Subsongs, with lengths and loop points, seeking, and sample names. Finds subsongs that repeat another's
+  music, and tells songs that loop from ones that stop.
 - Output options: sample rate, stereo separation, interpolation (none, linear, cubic),
   Amiga output filters (A500, A1200 or none, plus the LED filter), anti-click volume ramping,
   loop count, fade-out, gain.
@@ -63,8 +63,8 @@ hippel_close(module);
 
 The header documents the rest:
 - **Subsongs:** a file can hold several. `hippel_subsong_count` and `hippel_get_subsong_info` give each
-  one's number, length and loop. `hippel_select_subsong` picks one. Entries that play nothing are left
-  out.
+  one's number, length and loop, and whether it only repeats music in another (`repeat_of`).
+  `hippel_select_subsong` picks one. Entries that play nothing are left out.
 - **Settings:** loops and fade-out, interpolation, stereo separation, the Amiga's output filters, and
   the replayer's rules.
 - **Playback control:** seeking, and muting channels.
