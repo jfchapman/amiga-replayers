@@ -18,6 +18,12 @@ static amigareplay_settings make_settings(int sample_rate, int stereo_separation
 
 extern "C" {
 
+// amigareplay_probe, of a file's data alone.
+int amigareplay_wasm_probe(const void *data, size_t size) {
+	const amigareplay_file file = {nullptr, data, size};
+	return amigareplay_probe(&file);
+}
+
 // Opens a song at this rate with the default settings, but without the Amiga output filters (as libopenmpt plays
 // without its Amiga emulation). Returns null if it can't. Each file is three 32-bit numbers: where its name is (or 0),
 // where its data is, and its size.
