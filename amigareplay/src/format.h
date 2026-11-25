@@ -1,4 +1,4 @@
-// amigareplay: what a format provides. To add one, write its file (format_<name>.cpp) and list it in kFormats
+// AmigaReplay: what a format provides. To add one, write its file (format_<name>.cpp) and list it in kFormats
 // (amigareplay.cpp): nothing else here, nor in the programs that use the library, needs to know about it.
 #pragma once
 

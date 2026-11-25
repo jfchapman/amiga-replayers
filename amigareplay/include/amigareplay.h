@@ -1,5 +1,5 @@
 /*
- * amigareplay: one API for all the replayers here (TFMXreplay, SoundMonReplay and HippelReplay). It finds out
+ * AmigaReplay: one API for all the replayers here (TFMXreplay, SoundMonReplay and HippelReplay). It finds out
  * what kind of song it's given and plays it with the right one.
  *
  * Copyright (c) 2026 James Chapman. MIT licence: see LICENSE.

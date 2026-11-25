@@ -10,7 +10,7 @@ Libraries for playing Amiga music formats of the late 1980s and early 1990s:
 
 Each format is described in its library's `docs` folder, in enough detail to write a player from.
 
-[amigareplay](amigareplay/README.md) is one library for them all: it finds out what kind of song it's given, and plays
+[AmigaReplay](amigareplay/README.md) is one library for them all: it finds out what kind of song it's given, and plays
 it. Use that, or a single one of the others if it's all you need. They have a lot in common:
 
 - A plain C API (`include/*.h`), static or shared library, no dependencies.
@@ -35,7 +35,7 @@ Options:
 - `-DAMIGA_REPLAYERS_SHARED=ON` builds shared libraries (DLL / .so / .dylib).
 - `-DAMIGA_REPLAYERS_TOOLS=OFF` leaves out the tools.
 - `-DAMIGA_REPLAYERS_TFMX=OFF`, `-DAMIGA_REPLAYERS_SOUNDMON=OFF` and `-DAMIGA_REPLAYERS_HIPPEL=OFF` leave out a library.
-  amigareplay is only built with all three.
+  AmigaReplay is only built with all three.
 
 For a 32-bit Windows build, add `-A Win32` with a Visual Studio generator. `cmake --install build` installs the headers,
 libraries and a CMake package, so another project can use `find_package(AmigaReplayers)` and link
@@ -44,8 +44,8 @@ libraries and a CMake package, so another project can use `find_package(AmigaRep
 
 Without CMake, with GNU make and gcc or clang: `make` (static libraries and tools) or `make shared`.
 
-To compile a library's sources in your own project, add its `src` files and `common/*.cpp` (for amigareplay, all the
-libraries'), with its `include` folder (for amigareplay, all of them) and `common` on the include path.
+To compile a library's sources in your own project, add its `src` files and `common/*.cpp` (for AmigaReplay, all the
+libraries'), with its `include` folder (for AmigaReplay, all of them) and `common` on the include path.
 
 For the web, `build-wasm.cmd` builds `build\wasm\amigareplay.wasm` with [Emscripten](https://emscripten.org/) (run it
 from the repository's root, with `em++` on the path). It needs no JavaScript from Emscripten: instantiate it, call its
@@ -64,7 +64,7 @@ amigarender -l 1 -F 10 -o out.wav bp13.mysong    # plays it twice, then fades ou
 amigarender -n song.hip                          # only lists the subsongs and their lengths
 ```
 
-Run it without arguments for all the options. It's also the example of using amigareplay: it uses only the public API.
+Run it without arguments for all the options. It's also the example of using AmigaReplay: it uses only the public API.
 
 ## Tests
 

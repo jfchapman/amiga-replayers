@@ -1,5 +1,5 @@
 /*
- * amigarender: renders a song to a WAV file, using only the public amigareplay API. It knows nothing of the formats
+ * amigarender: renders a song to a WAV file, using only the public AmigaReplay API. It knows nothing of the formats
  * themselves.
  *
  * Copyright (c) 2026 James Chapman. MIT licence: see LICENSE.

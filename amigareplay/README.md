@@ -1,4 +1,4 @@
-# amigareplay
+# AmigaReplay
 
 One library for all the formats here: it finds out what kind of song it's given, and plays it with
 [TFMXreplay](../tfmxreplay/README.md), [SoundMonReplay](../soundmonreplay/README.md) or

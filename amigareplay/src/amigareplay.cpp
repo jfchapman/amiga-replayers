@@ -1,4 +1,4 @@
-// amigareplay: the C API, over the formats (format.h).
+// AmigaReplay: the C API, over the formats (format.h).
 #define AMIGAREPLAY_BUILDING
 #include "amigareplay.h"
 
