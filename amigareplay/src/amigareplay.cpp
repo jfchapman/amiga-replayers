@@ -230,6 +230,20 @@ int amigareplay_companion_file(const amigareplay_file *file, int index, char *bu
 	return all[size_t(index)].needed ? 1 : 2;
 }
 
+int amigareplay_main_file(const char *name, int index, char *buffer, size_t buffer_size) {
+	if (!name || index < 0 || !buffer)
+		return 0;
+	for (const Format *f : kFormats)
+		for (const std::string &main : f->main_files(base_name(name)))
+			if (!index--) {
+				if (main.size() >= buffer_size)
+					return 0;
+				std::memcpy(buffer, main.c_str(), main.size() + 1);
+				return 1;
+			}
+	return 0;
+}
+
 amigareplay_module *amigareplay_open(const amigareplay_file *files, int count, const amigareplay_settings *settings,
                                      const amigareplay_option *options, amigareplay_error *error) {
 	amigareplay_error dummy;

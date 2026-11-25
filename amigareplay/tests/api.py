@@ -59,6 +59,7 @@ option_default = function('option_default', S, I)
 get_option = function('get_option', S, P, S)
 probe = function('probe', I, c.POINTER(File))
 companion_file = function('companion_file', I, c.POINTER(File), I, P, c.c_size_t)
+main_file = function('main_file', I, S, I, P, c.c_size_t)
 open_files = function('open', P, c.POINTER(File), I, c.POINTER(Settings), c.POINTER(Option), c.POINTER(I))
 open_memory = function('open_memory', P, S, c.c_size_t, c.POINTER(Settings), c.POINTER(I))
 close = function('close', None, P)
@@ -133,6 +134,12 @@ mdat = b'TFMX-SONG ' + bytes(0x1000)
 for name, other in (('mdat.a b', 'smpl.a b'), ('MDAT.X', 'SMPL.X'), ('dir/mdat.x', 'smpl.x'), ('dir\\x.mdat', 'x.smpl'),
                     ('x.TFX', 'x.SAM'), ('x.tfx', 'x.sam'), ('x', None), ('mdat.', None)):
     check('companion of ' + name, companions(file(name, mdat)) == ([(other, 1)] if other else []), companions(file(name, mdat)))
+for other, name in (('smpl.a b', 'mdat.a b'), ('SMPL.X', 'MDAT.X'), ('dir/x.smpl', 'x.mdat'), ('x.SAM', 'x.TFX'), ('x', None),
+                    ('mdat.x', None), ('smpl.', None)):
+    buf = c.create_string_buffer(300)
+    found = buf.value.decode() if main_file(other.encode(), 0, buf, 300) else None
+    check('main file of ' + other, found == name, found)
+    check('only one', main_file(other.encode(), 1, buf, 300) == 0)
 small = c.create_string_buffer(6)
 check('companion: small buffer', companion_file(file('mdat.x', mdat), 0, small, 6) == 0)
 check('companion: just big enough', companion_file(file('mdat.x', mdat), 0, c.create_string_buffer(7), 7) == 1)

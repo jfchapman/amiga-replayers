@@ -181,6 +181,17 @@ AMIGAREPLAY_API amigareplay_probe_result amigareplay_probe(const amigareplay_fil
 AMIGAREPLAY_API int amigareplay_companion_file(const amigareplay_file *file, int index, char *buffer, size_t buffer_size);
 
 /*
+ * The reverse, for leaving out of a list of songs the files that only belong to one: writes the name of number 'index'
+ * (from 0) of the main files that the file named 'name' might belong to. If there's a file of that name in the same
+ * folder, it does. It goes by the name alone, so it only finds companion files that are named after their song.
+ *
+ * Returns 1, or 0 when there are no more (or the buffer is too small).
+ *
+ * For example, for "smpl.turrican" there's one, "mdat.turrican".
+ */
+AMIGAREPLAY_API int amigareplay_main_file(const char *name, int index, char *buffer, size_t buffer_size);
+
+/*
  * Opens a song. The data is copied, so the caller may free its buffers afterwards.
  *
  * files, count: the song's main file, then its other files, if it has any, in any order.

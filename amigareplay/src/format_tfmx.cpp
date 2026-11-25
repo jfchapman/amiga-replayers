@@ -99,26 +99,45 @@ bool same(const std::string &s, size_t at, const char *word) {
 // 'to' over s at 'at', keeping the case of the original (all capitals or not).
 void replace(std::string &s, size_t at, size_t length, const char *to) {
 	std::string word = to;
-	if (std::isupper((unsigned char)s[at]))
+	if (std::isupper((unsigned char)s[s[at] == '.' ? at + 1 : at]))
 		std::transform(word.begin(), word.end(), word.begin(), [](unsigned char c) { return char(std::toupper(c)); });
 	s.replace(at, length, word);
 }
 
-// The smpl file's name from the mdat's: mdat.<name> -> smpl.<name>, <name>.mdat -> <name>.smpl, or
-// <name>.tfx -> <name>.sam.
+// How the mdat and smpl files are named.
+struct Names {
+	const char *mdat, *smpl;
+	bool prefix;
+};
+const Names kNames[] = {{"mdat.", "smpl.", true}, {".mdat", ".smpl", false}, {".tfx", ".sam", false}};
+
+// The name of one file of a song from the other's, or "".
+std::string other_name(std::string name, const char *Names::*from, const char *Names::*to) {
+	for (const Names &n : kNames) {
+		const size_t length = std::strlen(n.*from);
+		if (name.size() <= length)
+			continue;
+		const size_t at = n.prefix ? 0 : name.size() - length;
+		if (same(name, at, n.*from)) {
+			replace(name, at, length, n.*to);
+			return name;
+		}
+	}
+	return "";
+}
+
 std::vector<Companion> companions(const amigareplay_file &file) {
-	std::string s = base_name(file.name);
-	if (is_tfhd(file))
+	const std::string smpl = other_name(base_name(file.name), &Names::mdat, &Names::smpl);
+	if (is_tfhd(file) || smpl.empty())
 		return {};
-	if (s.size() > 5 && same(s, 0, "mdat."))
-		replace(s, 0, 4, "smpl");
-	else if (s.size() > 5 && same(s, s.size() - 5, ".mdat"))
-		replace(s, s.size() - 4, 4, "smpl");
-	else if (s.size() > 4 && same(s, s.size() - 4, ".tfx"))
-		replace(s, s.size() - 3, 3, "sam");
-	else
+	return {{smpl}};
+}
+
+std::vector<std::string> main_files(const std::string &name) {
+	const std::string mdat = other_name(name, &Names::smpl, &Names::mdat);
+	if (mdat.empty())
 		return {};
-	return {{s}};
+	return {mdat};
 }
 
 std::unique_ptr<Player> open(const std::vector<amigareplay_file> &files, const amigareplay_settings &settings,
@@ -149,7 +168,7 @@ std::unique_ptr<Player> open(const std::vector<amigareplay_file> &files, const a
 }  // namespace
 
 const Format &format_tfmx() {
-	static const Format format = {"tfmx", {kVariant, kMixSetting}, probe, companions, open};
+	static const Format format = {"tfmx", {kVariant, kMixSetting}, probe, companions, main_files, open};
 	return format;
 }
 

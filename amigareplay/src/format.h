@@ -66,6 +66,9 @@ struct Format {
 	// The song's other files.
 	std::vector<Companion> (*companions)(const amigareplay_file &file);
 
+	// The main files that a companion file, going by its name, might belong to.
+	std::vector<std::string> (*main_files)(const std::string &name);
+
 	// files: the song's main file, which probe accepted, and any others.
 	std::unique_ptr<Player> (*open)(const std::vector<amigareplay_file> &files, const amigareplay_settings &settings,
 	                                const Options &options, amigareplay_error &error);

@@ -75,6 +75,8 @@ amigareplay_probe_result probe(const amigareplay_file &file) {
 
 std::vector<Companion> companions(const amigareplay_file &) { return {}; }
 
+std::vector<std::string> main_files(const std::string &) { return {}; }
+
 std::unique_ptr<Player> open(const std::vector<amigareplay_file> &files, const amigareplay_settings &settings,
                              const Options &options, amigareplay_error &error) {
 	hippel_settings s;
@@ -94,7 +96,7 @@ std::unique_ptr<Player> open(const std::vector<amigareplay_file> &files, const a
 }  // namespace
 
 const Format &format_hippel() {
-	static const Format format = {"hippel", {kReplayer}, probe, companions, open};
+	static const Format format = {"hippel", {kReplayer}, probe, companions, main_files, open};
 	return format;
 }
 
