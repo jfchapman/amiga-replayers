@@ -1,6 +1,6 @@
 # amiga-replayers
 
-Libraries for playing Amiga game music in formats of the late 1980s and early 1990s:
+Libraries for playing Amiga music formats of the late 1980s and early 1990s:
 
 | Library | Format | Games |
 |---|---|---|
@@ -77,11 +77,6 @@ distributed as they come from the games themselves. `ctest` runs the ones that d
 `transfer.js` shows the match by frequency, `cut.js` copies and filters stretches of WAV files, and `splice.js` makes a
 blind listening test: random stretches of two or more versions joined into one file, with an answer key. Each prints its
 usage when run without arguments.
-
-## Version
-
-All the libraries share one version number (`common/amiga_replayers_version.h`), so a new version doesn't mean that every
-library has changed. The release notes say which have.
 
 ## AI Disclaimer
 
