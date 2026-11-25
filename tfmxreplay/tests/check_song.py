@@ -15,8 +15,8 @@ import sys
 from common import find_tool
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-HARNESS = os.environ.get('TFMX_TRACE', os.path.join(HERE, '..', '..', 'tfmx-trace'))
-OUT = os.path.join(HERE, '..', 'build', 'traces')
+HARNESS = os.environ.get('TFMX_TRACE', os.path.join(HERE, '..', '..', '..', 'tfmx-trace'))
+OUT = os.path.join(HERE, '..', '..', 'build', 'traces')
 
 
 def smpl_of(mdat):

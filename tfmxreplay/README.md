@@ -4,10 +4,6 @@ A library for playing TFMX music: the format Chris Hülsbeck wrote for Amiga gam
 *Turrican*, *Turrican 2* and *Apidya*, and which Rudolf Stember (Factor 5), Tim Follin, Lajos Suvak
 and others also used, from 1989 to the mid-1990s.
 
-- Plain C API (`include/tfmxreplay.h`), static or shared library, no dependencies.
-- Builds with CMake or a plain Makefile; tested with MSVC (x64 and 32-bit).
-- Also builds for the web as WebAssembly (wasm). For an example web-based player, please visit
-  [modplayer](https://mods.chapzero.com).
 - Two-file songs (`mdat.*` + `smpl.*`) and single-file TFHD songs.
 - Subsongs, with lengths and loop points, seeking, and the song's text. Finds the main subsong and
   subsongs that repeat another's music, and tells songs that loop from ones that end in silence.
@@ -19,29 +15,8 @@ and others also used, from 1989 to the mid-1990s.
   from the song, or chosen. *Turrican 2*'s two builds share a variant of their own, which has to
   be chosen.
 
-The format is described in [docs/TFMX-format.md](docs/TFMX-format.md).
-
-## Building
-
-With CMake:
-
-```
-cmake -S . -B build
-cmake --build build --config Release
-```
-
-Options: `-DTFMX_BUILD_SHARED=ON` for a shared library (DLL / .so / .dylib), `-DTFMX_BUILD_TOOLS=OFF`
-to skip the tools. For a 32-bit Windows build, add `-A Win32` with a Visual Studio generator.
-`cmake --install build` installs the header, library and a CMake package, so another project can
-use `find_package(TFMXreplay)` and link `TFMXreplay::tfmxreplay`.
-
-Without CMake, with GNU make and gcc or clang: `make` (static library and tools) or `make shared`.
-
-For the web, `wasm\build.cmd` builds a single `build\wasm\tfmxreplay.wasm` with
-[Emscripten](https://emscripten.org/) (run it from the repository's root, with `em++` on the path).
-It needs no JavaScript from Emscripten: instantiate it, call its `_initialize` export, and give it
-a do-nothing `env.emscripten_notify_memory_growth` import. `wasm/tfmxreplay_wasm.cpp` adds
-`tfmx_wasm_open` and `tfmx_wasm_configure`, which take the settings as plain numbers.
+The format is described in [docs/TFMX-format.md](docs/TFMX-format.md). Building it, and what it shares with the other
+libraries here, is in [the main README](../README.md).
 
 ## Using the library
 
@@ -98,7 +73,7 @@ Run it without arguments for all the options. The smpl file is found from the md
 
 ## Tests
 
-`python tests/selftest.py` needs only Python and a build of the tools (`ctest` runs it too, after
+`python tests/selftest.py` (from this folder) needs only Python and a build of the tools (`ctest` runs it too, after
 a CMake build). It builds tiny songs in memory, and checks the replayer's output on every variant
 against saved results in `tests/expected`, along with variant detection and a render through the
 public API. A failure means the behaviour has changed. If that was intended, check the difference
@@ -109,14 +84,8 @@ every subsong in a collection with a build from before the change and with the c
 lists the subsongs that sound different, with the size of each difference. It shows which songs a
 change reaches, not whether the new output is right.
 
-`tests/wav/` has tools for comparing renders with recordings from an emulator, run with Node.js
-(no packages needed). `locate.js` finds a song in a recording and measures how well a render
-fits it, `voicefit.js` fits each voice separately (from `tfmxrender -V` renders) to compare two
-builds against a recording, `specfit.js` compares songs with a recording tick by tick by level and
-spectrum (so sub-millisecond timing differences don't count), `transfer.js` shows the match by
-frequency, `cut.js` copies and filters stretches of WAV files, and `splice.js` makes a blind
-listening test: random stretches of two or more versions joined into one file, with an answer key. Each prints its usage when run without
-arguments. Section 16.2 of [the format document](docs/TFMX-format.md) describes the method.
+`../tests/wav/` has tools for comparing renders with recordings ([the main README](../README.md) describes them).
+Section 16.2 of [the format document](docs/TFMX-format.md) describes the method.
 
 The other scripts in `tests/` need a TFMX song collection, and `regress.py` and `check_song.py`
 also need traces of the original replayers, which can't be distributed as they come from the
@@ -170,11 +139,3 @@ Current state:
 - **SID synthesis (macros 22-29):** implemented from measurements, not yet compared song by song.
 - All 368 songs in the modland collection open (bar one 540-byte file with no playable
   subsong), and all but 7 of their 1,608 subsongs get a length.
-
-## AI Disclaimer
-
-This project uses AI development tools (Claude Code by Anthropic).
-
-## Licence
-
-MIT: see [LICENSE](LICENSE).

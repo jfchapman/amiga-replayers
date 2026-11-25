@@ -3,10 +3,6 @@
 A library for playing BP SoundMon music: the format Brian Postma wrote for the Amiga, used from 1989
 in games such as *Alien Breed*, *Plexu* and *Fantasy World Dizzy*, and on music disks and in demos.
 
-- Plain C API (`include/soundmonreplay.h`), static or shared library, no dependencies.
-- Builds with CMake; tested with MSVC (x64 and 32-bit).
-- Also builds for the web as WebAssembly (wasm). For an example web-based player, please visit
-  [modplayer](https://mods.chapzero.com).
 - All three versions: BP SoundMon 1 (`BPSM`), 2 (`V.2`) and 3 (`V.3`) files, with V.2 and V.3 synth
   instruments and the effects that rewrite their waveforms.
 - Subsongs, with lengths and loop points, seeking, the song's title and its instrument names. Tells
@@ -18,18 +14,8 @@ in games such as *Alien Breed*, *Plexu* and *Fantasy World Dizzy*, and on music 
   against the original replayers running in an Amiga emulator, without reading any replayer's
   code. It matches them exactly on all but two of modland's files; see Status.
 
-The format is described in [docs/SoundMon-format.md](docs/SoundMon-format.md).
-
-## Building
-
-```
-cmake -S . -B build
-cmake --build build --config Release
-```
-
-Options: `-DSMON_BUILD_SHARED=ON` builds a shared library (DLL), `-DSMON_BUILD_TOOLS=OFF` leaves
-out the tools. `cmake --install build` installs the header, library and a CMake package
-(`find_package(SoundMonReplay)`, target `SoundMonReplay::soundmonreplay`).
+The format is described in [docs/SoundMon-format.md](docs/SoundMon-format.md). Building it, and what it shares with the other
+libraries here, is in [the main README](../README.md).
 
 ## Using it
 
@@ -102,11 +88,3 @@ Known differences from the Amiga:
   same (Paula's fastest rate), even notes play a very low rumble there.
 - History isn't modelled: every song starts from the replayer's fresh state, whereas a game that
   plays one song after another without resetting carries some state over.
-
-## AI Disclaimer
-
-This project uses AI development tools (Claude Code by Anthropic).
-
-## Licence
-
-MIT: see [LICENSE](LICENSE).

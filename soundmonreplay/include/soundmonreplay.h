@@ -29,6 +29,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "amiga_replayers_version.h"
+
 #if defined(_WIN32) && defined(SMON_SHARED)
 #  if defined(SMON_BUILDING)
 #    define SMON_API __declspec(dllexport)
@@ -45,9 +47,9 @@
 extern "C" {
 #endif
 
-#define SMON_VERSION_MAJOR 0
-#define SMON_VERSION_MINOR 1
-#define SMON_VERSION_PATCH 0
+#define SMON_VERSION_MAJOR AMIGA_REPLAYERS_VERSION_MAJOR
+#define SMON_VERSION_MINOR AMIGA_REPLAYERS_VERSION_MINOR
+#define SMON_VERSION_PATCH AMIGA_REPLAYERS_VERSION_PATCH
 
 /* Returns the library version as "major.minor.patch". */
 SMON_API const char *smon_version(void);

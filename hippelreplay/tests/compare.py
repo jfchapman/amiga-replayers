@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TRACE = os.path.join(HERE, '..', 'build', 'x64', 'Release', 'hippeltrace.exe')
+TRACE = os.path.join(HERE, '..', '..', 'build', 'x64', 'Release', 'hippeltrace.exe')
 
 # Captures whose songs are in modland: savestate, song, subsong, tick the capture starts at, voices
 # the music plays (the rest are the game's), whether its main program plays the music

@@ -27,7 +27,7 @@ def best_offset(ref, ours):
 def main():
     table = collections.Counter()
     for stem in sys.argv[1:]:
-        base = os.path.join(HERE, '..', 'build', 'traces', stem)
+        base = os.path.join(HERE, '..', '..', 'build', 'traces', stem)
         ref, ours = parse(base + '.ref.txt'), parse(base + '.ours.txt')
         off = best_offset(ref, ours)
         for j, w in enumerate(ours):

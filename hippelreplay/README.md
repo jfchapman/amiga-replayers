@@ -3,9 +3,6 @@
 A library for playing Jochen Hippel's Amiga music: the format he wrote for games such as *Wings of
 Death*, *Lethal Xcess*, *Enchanted Land*, *A Prehistoric Tale*, *Dragonflight* and *Leavin' Teramis*.
 
-- Plain C API (`include/hippelreplay.h`), static or shared library, no dependencies.
-- Builds with CMake; tested with MSVC (x64 and 32-bit).
-- Also builds for the web as WebAssembly (wasm).
 - All of the Amiga forms: `.hip` and `.hip7` files, with or without their replayer in front, and COSO
   (`.hipc`) files. Songs with 4 voices, or with 7, four of which are mixed in software as the original
   does.
@@ -21,24 +18,8 @@ Death*, *Lethal Xcess*, *Enchanted Land*, *A Prehistoric Tale*, *Dragonflight* a
 
 The Atari ST versions aren't supported: they drive a different sound chip.
 
-The format is described in [docs/Hippel-format.md](docs/Hippel-format.md).
-
-## Building
-
-```
-cmake -S . -B build
-cmake --build build --config Release
-```
-
-Options: `-DHIPPEL_BUILD_SHARED=ON` builds a shared library (DLL), `-DHIPPEL_BUILD_TOOLS=OFF` leaves
-out the tools. `cmake --install build` installs the header, library and a CMake package
-(`find_package(HippelReplay)`, target `HippelReplay::hippelreplay`).
-
-For the web, `wasm\build.cmd` builds a single `build\wasm\hippelreplay.wasm` with
-[Emscripten](https://emscripten.org/) (run it from the repository's root, with `em++` on the path).
-It needs no JavaScript from Emscripten: instantiate it, call its `_initialize` export, and give it
-a do-nothing `env.emscripten_notify_memory_growth` import. `wasm/hippelreplay_wasm.cpp` adds
-`hippel_wasm_open` and `hippel_wasm_configure`, which take the settings as plain numbers.
+The format is described in [docs/Hippel-format.md](docs/Hippel-format.md). Building it, and what it shares with the other
+libraries here, is in [the main README](../README.md).
 
 ## Using it
 
@@ -123,11 +104,3 @@ Known differences from the Amiga:
 `astaroth.hip` has a layout of its own and isn't supported (its songs are in modland as
 `astaroth123.hipc` and `astaroth4.hipc`), nor are four of modland's *Cryptoburners* files, which are
 damaged.
-
-## AI Disclaimer
-
-This project uses AI development tools (Claude Code by Anthropic).
-
-## Licence
-
-MIT: see [LICENSE](LICENSE).

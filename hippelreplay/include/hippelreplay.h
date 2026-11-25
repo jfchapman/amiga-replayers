@@ -29,6 +29,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "amiga_replayers_version.h"
+
 #if defined(_WIN32) && defined(HIPPEL_SHARED)
 #  if defined(HIPPEL_BUILDING)
 #    define HIPPEL_API __declspec(dllexport)
@@ -45,9 +47,9 @@
 extern "C" {
 #endif
 
-#define HIPPEL_VERSION_MAJOR 0
-#define HIPPEL_VERSION_MINOR 1
-#define HIPPEL_VERSION_PATCH 0
+#define HIPPEL_VERSION_MAJOR AMIGA_REPLAYERS_VERSION_MAJOR
+#define HIPPEL_VERSION_MINOR AMIGA_REPLAYERS_VERSION_MINOR
+#define HIPPEL_VERSION_PATCH AMIGA_REPLAYERS_VERSION_PATCH
 
 /* Returns the library version as "major.minor.patch". */
 HIPPEL_API const char *hippel_version(void);

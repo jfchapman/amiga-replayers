@@ -26,7 +26,7 @@ class Info(ctypes.Structure):
 
 
 path = sys.argv[1]
-dll_path = sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, '..', 'build', 'x64-dll', 'Release', 'tfmxreplay.dll')
+dll_path = sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, '..', '..', 'build', 'x64-dll', 'Release', 'tfmxreplay.dll')
 t = ctypes.CDLL(dll_path)
 t.tfmx_open.restype = ctypes.c_void_p
 t.tfmx_open.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t, ctypes.POINTER(Settings), ctypes.c_void_p]

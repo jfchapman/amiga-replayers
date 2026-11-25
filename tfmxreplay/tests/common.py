@@ -3,7 +3,7 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.join(HERE, '..')
+ROOT = os.path.join(HERE, '..', '..')
 BUILD_DIRS = [
     ('build', 'x64', 'Release'), ('build', 'Release'), ('build', 'win32', 'Release'),
     ('build', 'x64', 'Debug'), ('build', 'Debug'), ('build',), (),

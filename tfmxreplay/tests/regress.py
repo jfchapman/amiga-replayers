@@ -16,7 +16,7 @@ import sys
 from common import find_tool, usage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TRACES = os.path.join(HERE, '..', 'build', 'traces')
+TRACES = os.path.join(HERE, '..', '..', 'build', 'traces')
 
 VARIANTS = {
     't1': '1.5', 't1-cia': '1.5', 't1-game': '1.5',
@@ -47,7 +47,7 @@ CAPTURES = [
     ('apidya-capture2.txt', '5C00', 'E000', '343F2', 'mdat.apidya (title)', 0, 'pro', '012'),
     ('apidya-capture3.txt', '5C00', 'E000', '343F2', 'mdat.apidya (title)', 0, 'pro', '012'),
 ]
-CAPTURE_DIR = os.environ.get('TFMX_TRACE', os.path.join(HERE, '..', '..', 'tfmx-trace'))
+CAPTURE_DIR = os.environ.get('TFMX_TRACE', os.path.join(HERE, '..', '..', '..', 'tfmx-trace'))
 
 
 def check_captures(songs):

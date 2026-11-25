@@ -28,7 +28,7 @@ def cell(writes, voice):
 def main():
     stem, voice, first = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
     last = int(sys.argv[4]) if len(sys.argv) > 4 else first + 12
-    base = os.path.join(HERE, '..', 'build', 'traces', stem)
+    base = os.path.join(HERE, '..', '..', 'build', 'traces', stem)
     ref, ours = parse(base + '.ref.txt'), parse(base + '.ours.txt')
     for t in range(first, last + 1):
         a = cell(ref[t + 1], voice) if t + 1 < len(ref) else ''

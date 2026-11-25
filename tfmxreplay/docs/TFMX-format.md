@@ -774,7 +774,7 @@ The sound passes through three stages, and each reference sees a different part 
 - **Per-voice timing.** The game writes the voices in turn, about 0.12 ms apart, where TFMXreplay writes all four at once. A fit that gives a side one time offset breaks down wherever its two voices play together.
 - **Detail above about 6 kHz.** With no interpolation, the two emulators' sample steps fall differently at 48 kHz, so above about 6 kHz the outputs no longer line up.
 
-Taking those out (a 20 Hz high-pass, a 5 kHz low-pass, and each voice rendered on its own with `tfmxrender -V` and fitted with its own time offset by `tests/wav/voicefit.js`) leaves gains of 0.98–1.00 and residuals of −12 to −16 dB, except *lovely feelings*' right side at −7.6 dB, not yet explained. Between 20 Hz and 6 kHz, *lovely feelings*' left side matches within 0.1 dB.
+Taking those out (a 20 Hz high-pass, a 5 kHz low-pass, and each voice rendered on its own with `tfmxrender -V` and fitted with its own time offset by `tests/wav/voicefit.js` (at the repository's root)) leaves gains of 0.98–1.00 and residuals of −12 to −16 dB, except *lovely feelings*' right side at −7.6 dB, not yet explained. Between 20 Hz and 6 kHz, *lovely feelings*' left side matches within 0.1 dB.
 
 **Changes and regressions.** `tests/everysong.py` renders every subsong of a collection with two builds of `tfmxrender` and lists the ones that differ, and by how much. It shows which songs a change reaches, not whether the new output is right. That still needs the references above. Whether a difference can be heard is a separate question: `tests/wav/splice.js` joins random stretches of two or more versions into one file for a blind listening test (§8.5 has an example).
 

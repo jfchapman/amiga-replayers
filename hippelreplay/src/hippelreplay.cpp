@@ -145,7 +145,7 @@ struct hippel_module {
 
 extern "C" {
 
-const char *hippel_version(void) { return "0.1.0"; }
+const char *hippel_version(void) { return AMIGA_REPLAYERS_VERSION; }
 
 const char *hippel_error_string(hippel_error error) {
 	switch (error) {

@@ -31,6 +31,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "amiga_replayers_version.h"
+
 #if defined(_WIN32) && defined(TFMX_SHARED)
 #  if defined(TFMX_BUILDING)
 #    define TFMX_API __declspec(dllexport)
@@ -47,9 +49,9 @@
 extern "C" {
 #endif
 
-#define TFMX_VERSION_MAJOR 0
-#define TFMX_VERSION_MINOR 2
-#define TFMX_VERSION_PATCH 0
+#define TFMX_VERSION_MAJOR AMIGA_REPLAYERS_VERSION_MAJOR
+#define TFMX_VERSION_MINOR AMIGA_REPLAYERS_VERSION_MINOR
+#define TFMX_VERSION_PATCH AMIGA_REPLAYERS_VERSION_PATCH
 
 /* Returns the library version as "major.minor.patch". */
 TFMX_API const char *tfmx_version(void);

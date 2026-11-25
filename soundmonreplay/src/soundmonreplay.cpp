@@ -127,7 +127,7 @@ struct smon_module {
 
 extern "C" {
 
-const char *smon_version(void) { return "0.1.0"; }
+const char *smon_version(void) { return AMIGA_REPLAYERS_VERSION; }
 
 const char *smon_error_string(smon_error error) {
 	switch (error) {
