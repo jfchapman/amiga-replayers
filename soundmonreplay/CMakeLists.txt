@@ -1,4 +1,4 @@
-replay_library(soundmonreplay PREFIX SMON TOOLS smon
+replay_library(soundmonreplay PREFIX SMON TRACE smontrace
 	SOURCES
 		../common/output.cpp
 		../common/paula.cpp

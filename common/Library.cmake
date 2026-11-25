@@ -1,7 +1,7 @@
-# replay_library(<name> PREFIX <prefix> TOOLS <prefix of the tools' names> SOURCES <files>)
-# One replayer's library, and its render and trace tools, from the folder's include, src and tools.
+# replay_library(<name> PREFIX <prefix> SOURCES <files> [TRACE <name of its trace tool>])
+# One library, and its trace tool, from the folder's include, src and tools.
 function(replay_library NAME)
-	cmake_parse_arguments(ARG "" "PREFIX;TOOLS" "SOURCES" ${ARGN})
+	cmake_parse_arguments(ARG "" "PREFIX;TRACE" "SOURCES" ${ARGN})
 	if(AMIGA_REPLAYERS_SHARED)
 		add_library(${NAME} SHARED ${ARG_SOURCES})
 		target_compile_definitions(${NAME} PUBLIC ${ARG_PREFIX}_SHARED)  # its API file defines ${ARG_PREFIX}_BUILDING itself
@@ -17,11 +17,8 @@ function(replay_library NAME)
 		PRIVATE src)
 	set_target_properties(${NAME} PROPERTIES PUBLIC_HEADER include/${NAME}.h)
 
-	# Link the C runtime statically by default, like most audio codec builds for Windows plugins.
-	set(RUNTIME "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	if(MSVC)
 		target_compile_options(${NAME} PRIVATE /W4)
-		set_property(TARGET ${NAME} PROPERTY MSVC_RUNTIME_LIBRARY ${RUNTIME})
 	else()
 		target_compile_options(${NAME} PRIVATE -Wall -Wextra)
 	endif()
@@ -31,11 +28,8 @@ function(replay_library NAME)
 		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 		PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-	if(AMIGA_REPLAYERS_TOOLS)
-		set(RENDER ${ARG_TOOLS}render)
-		set(TRACE ${ARG_TOOLS}trace)
-		add_executable(${RENDER} tools/${RENDER}.c)
-		target_link_libraries(${RENDER} PRIVATE ${NAME})
+	if(AMIGA_REPLAYERS_TOOLS AND ARG_TRACE)
+		set(TRACE ${ARG_TRACE})
 		# The trace tool uses the library's internal classes, which a shared library doesn't export, so it builds
 		# the sources itself in that case.
 		if(AMIGA_REPLAYERS_SHARED)
@@ -47,10 +41,7 @@ function(replay_library NAME)
 		endif()
 		target_include_directories(${TRACE} PRIVATE src)
 		if(MSVC)
-			set_property(TARGET ${RENDER} ${TRACE} PROPERTY MSVC_RUNTIME_LIBRARY ${RUNTIME})
-			target_compile_definitions(${RENDER} PRIVATE _CRT_SECURE_NO_WARNINGS)
 			target_compile_definitions(${TRACE} PRIVATE _CRT_SECURE_NO_WARNINGS)
 		endif()
-		install(TARGETS ${RENDER} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 	endif()
 endfunction()

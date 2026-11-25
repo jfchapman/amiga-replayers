@@ -66,8 +66,7 @@ doesn't, so the library goes by what the song uses (section 10 of the format doc
 
 ## Tools
 
-- `hippelrender [options] song out.wav` renders a WAV file using the public API only. `-d` lists the
-  subsongs and their lengths.
+- `amigarender` renders songs to WAV files ([the main README](../README.md) describes it).
 - `hippeltrace song [subsong] [ticks] [replayer]` prints each voice's Paula state per tick, for
   comparison with the original replayers.
 

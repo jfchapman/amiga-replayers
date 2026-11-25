@@ -1,4 +1,4 @@
-replay_library(hippelreplay PREFIX HIPPEL TOOLS hippel
+replay_library(hippelreplay PREFIX HIPPEL TRACE hippeltrace
 	SOURCES
 		../common/output.cpp
 		../common/paula.cpp

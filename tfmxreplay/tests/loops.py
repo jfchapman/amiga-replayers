@@ -3,7 +3,7 @@ audio after the loop with the audio it should be repeating from loop_start. A su
 other alignment fits better, which means the loop point is wrong. Some songs don't repeat exactly
 (a fade-in, sample positions carried over the loop): the notes are the same, so they're only counted.
 
-Usage: python loops.py <folder> [tfmxrender path]
+Usage: python loops.py <folder> [amigarender path]
 """
 import array
 import concurrent.futures
@@ -74,7 +74,7 @@ def one(args):
 def main():
     usage(__doc__, 1)
     root = sys.argv[1]
-    tool = sys.argv[2] if len(sys.argv) > 2 else find_tool('tfmxrender')
+    tool = sys.argv[2] if len(sys.argv) > 2 else find_tool('amigarender')
     songs = sorted(glob.glob(os.path.join(glob.escape(root), '**', 'mdat.*'), recursive=True))
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as pool:
         results = [x for r in pool.map(one, [(tool, s) for s in songs]) for x in r]

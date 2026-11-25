@@ -47,8 +47,7 @@ The header documents the rest:
 
 ## Tools
 
-- `smonrender [options] song.bp out.wav` renders a WAV file using the public API only. `-d`
-  lists the subsongs and their lengths.
+- `amigarender` renders songs to WAV files ([the main README](../README.md) describes it).
 - `smontrace song.bp [ticks]` prints the replayer's Paula register writes per tick, for
   comparison with the original replayers.
 

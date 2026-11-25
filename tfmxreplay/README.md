@@ -57,16 +57,8 @@ The header documents every function. Points worth knowing:
 
 ## Tools
 
-`tfmxrender` renders songs to 16-bit WAV files, using only the public API (it's also the example
-of using the library from C):
-
-```
-tfmxrender "mdat.turrican 2 level 1-desert"        # finds smpl.* itself
-tfmxrender -a -o out "mdat.apidya (level 1)"       # every subsong: out-0.wav, out-1.wav, ...
-tfmxrender -n "mdat.apidya (level 1)"              # list subsongs, lengths and text
-```
-
-Run it without arguments for all the options. The smpl file is found from the mdat's name:
+`amigarender` renders songs to WAV files ([the main README](../README.md) describes it). The smpl
+file is found from the mdat's name:
 `mdat.<name>` → `smpl.<name>`, `<name>.mdat` → `<name>.smpl`, or `<name>.tfx` → `<name>.sam`.
 
 `tfmxtrace` prints the Paula register writes the replayer makes, tick by tick, for testing.
@@ -79,7 +71,7 @@ against saved results in `tests/expected`, along with variant detection and a re
 public API. A failure means the behaviour has changed. If that was intended, check the difference
 and run it again with `--update`.
 
-After a change to the library, `python tests/everysong.py <song folder> <old tfmxrender>` renders
+After a change to the library, `python tests/everysong.py <song folder> <old amigarender>` renders
 every subsong in a collection with a build from before the change and with the current one, and
 lists the subsongs that sound different, with the size of each difference. It shows which songs a
 change reaches, not whether the new output is right.

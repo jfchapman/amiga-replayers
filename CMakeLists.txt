@@ -17,6 +17,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 99)
+# Link the C runtime statically by default, like most audio codec builds for Windows plugins.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # Everything goes in one folder, where the test scripts look for the tools.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -35,6 +37,10 @@ if(AMIGA_REPLAYERS_SOUNDMON)
 endif()
 if(AMIGA_REPLAYERS_HIPPEL)
 	add_subdirectory(hippelreplay)
+endif()
+# The library that plays them all needs them all.
+if(AMIGA_REPLAYERS_TFMX AND AMIGA_REPLAYERS_SOUNDMON AND AMIGA_REPLAYERS_HIPPEL)
+	add_subdirectory(amigareplay)
 endif()
 
 install(FILES common/amiga_replayers_version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

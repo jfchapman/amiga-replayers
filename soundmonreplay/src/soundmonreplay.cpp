@@ -261,6 +261,7 @@ int smon_get_subsong_info(const smon_module *m, int index, smon_subsong_info *in
 	info->loop_start = s.ticks < 0 ? -1 : s.loop_tick * kTickSeconds;
 	info->loop_length = s.ticks < 0 ? 0 : (s.ticks - s.loop_tick) * kTickSeconds;
 	info->looped = s.looped ? 1 : 0;
+	info->audible = s.audible ? 1 : 0;
 	return 0;
 }
 

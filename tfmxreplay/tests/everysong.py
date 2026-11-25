@@ -1,4 +1,4 @@
-"""Change check: render every subsong of every song in a folder with two builds of tfmxrender and
+"""Change check: render every subsong of every song in a folder with two builds of amigarender and
 list the subsongs whose audio differs, with how much they differ.
 
 Use it after a change to the library, with a build from before the change (a release, or the
@@ -6,7 +6,7 @@ previous commit built in a separate folder) as the old tool. It shows which song
 it can't say whether the new output is right. Songs that differ only by a level shift show a
 large difference overall but little above 30 Hz.
 
-Usage: python everysong.py <folder> <old tfmxrender> [new tfmxrender] [options]
+Usage: python everysong.py <folder> <old amigarender> [new amigarender] [options]
   -r <rate>      sample rate of the renders (default 22050)
   -j <n>         songs rendered at once (default: the number of processors)
   --keep <dir>   keep the differing renders there, as <song> <subsong> old/new.wav
@@ -71,7 +71,7 @@ def difference(old_path, new_path, rate):
 
 
 def label(file_name):
-    """The subsong index from a render's file name (tfmxrender -a numbers them song.wav-<n>.wav)."""
+    """The subsong index from a render's file name (amigarender -a numbers them song.wav-<n>.wav)."""
     stem = file_name[:-4] if file_name.lower().endswith('.wav') else file_name
     return stem.rsplit('-', 1)[-1]
 
@@ -109,7 +109,7 @@ def main():
         else:
             positional.append(a)
     root, old_tool = positional[0], positional[1]
-    new_tool = positional[2] if len(positional) > 2 else find_tool('tfmxrender')
+    new_tool = positional[2] if len(positional) > 2 else find_tool('amigarender')
     if keep:
         os.makedirs(keep, exist_ok=True)
     songs = sorted(p for p in glob.glob(os.path.join(root, '**', '*'), recursive=True)

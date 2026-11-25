@@ -140,6 +140,7 @@ typedef struct smon_subsong_info {
 	double loop_length; /* seconds from loop_start to the end of the play-through, 0 if it doesn't loop */
 	int looped;         /* 1 if the song is heard to loop: its loop has notes in it. Other songs stop at
 	                       the end of a play-through, whatever loop_count and fade_seconds say */
+	int audible;        /* 0 if it has no notes */
 } smon_subsong_info;
 
 /* Fills info for a subsong. Returns 0 on success. */

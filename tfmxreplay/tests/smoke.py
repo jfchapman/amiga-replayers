@@ -1,7 +1,7 @@
-"""Smoke test: run every song in a folder through tfmxrender -n (open, list subsongs, and a fast
+"""Smoke test: run every song in a folder through amigarender -n (open, list subsongs, and a fast
 run of each subsong to find its length). Reports failures, crashes and subsongs with no end.
 
-Usage: python smoke.py <folder> [tfmxrender path]
+Usage: python smoke.py <folder> [amigarender path]
 """
 import collections
 import glob
@@ -16,7 +16,7 @@ from common import find_tool, usage
 def main():
     usage(__doc__, 1)
     root = sys.argv[1]
-    tool = sys.argv[2] if len(sys.argv) > 2 else find_tool('tfmxrender')
+    tool = sys.argv[2] if len(sys.argv) > 2 else find_tool('amigarender')
     songs = sorted(p for p in glob.glob(os.path.join(root, '**', '*'), recursive=True)
                    if os.path.basename(p).lower().startswith('mdat.') or p.lower().endswith('.mdat'))
     stats = collections.Counter()
@@ -34,7 +34,7 @@ def main():
             continue
         stats['songs'] += 1
         for line in r.stdout.splitlines():
-            if line.startswith('variant:'):
+            if line.startswith('type:'):
                 variants[line.split(':', 1)[1].strip()] += 1
             elif ': song' in line:
                 stats['subsongs'] += 1

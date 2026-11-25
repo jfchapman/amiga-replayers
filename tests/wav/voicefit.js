@@ -1,5 +1,5 @@
 // Fits each side of a recording from its two voices (left 0 + 3, right 1 + 2), each voice on its own
-// lag, for one or more sets of single-voice renders (tfmxrender -V n), and compares the sets.
+// lag, for one or more sets of single-voice renders (amigarender -V n), and compares the sets.
 // node voicefit.js <recording.wav> <song start s> <name>=<voice files with %v> ... [--seconds n]
 //   e.g. node voicefit.js rec.wav 269.5 old=lf-old-%v.wav new=lf-new-%v.wav
 // The recording and renders are band-limited to 20 Hz - 5 kHz (§16.2 of the format doc). The game

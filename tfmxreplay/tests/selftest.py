@@ -1,6 +1,6 @@
 """Self-contained tests: needs only Python and a build of the tools, with no song files.
 
-Usage: python selftest.py [--tool tfmxtrace] [--render tfmxrender] [--only name] [--update]
+Usage: python selftest.py [--tool tfmxtrace] [--render amigarender] [--only name] [--update]
 
 Builds tiny TFMX songs in memory, runs each through tfmxtrace on every replayer variant, and
 compares the Paula writes with tests/expected. Those files are the library's own output, saved
@@ -8,7 +8,7 @@ from a build that passed the comparisons with the original replayers, so a failu
 behaviour has changed, not that it has stopped matching a game. If a change is meant to alter
 the output, check the difference, then run with --update.
 
-It also checks variant detection, and renders a song with tfmxrender through the public API.
+It also checks variant detection, and renders a song with amigarender through the public API.
 """
 import argparse
 import difflib
@@ -322,7 +322,7 @@ def check_render(render, folder):
 
 
 def check_voice_mask(render, folder):
-    """tfmxrender -V (tfmx_set_voice_mask): the test song plays on voice 0 only, so hearing voice 0
+    """amigarender -V (tfmx_set_voice_mask): the test song plays on voice 0 only, so hearing voice 0
     gives the full render, and hearing the others gives silence of the same length."""
     mdat, _ = song_end()
     paths = write_song(folder, 'mask', mdat)
@@ -344,12 +344,12 @@ def check_voice_mask(render, folder):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--tool', help='path of tfmxtrace')
-    ap.add_argument('--render', help='path of tfmxrender')
+    ap.add_argument('--render', help='path of amigarender')
     ap.add_argument('--only', help='run this song only')
     ap.add_argument('--update', action='store_true', help='save the current output as expected')
     args = ap.parse_args()
     tool = args.tool or find_tool('tfmxtrace', 'TFMX_TRACE_TOOL')
-    render = args.render or find_tool('tfmxrender', 'TFMX_RENDER_TOOL')
+    render = args.render or find_tool('amigarender', 'AMIGA_RENDER_TOOL')
     failed = 0
     with tempfile.TemporaryDirectory() as folder:
         checks = [(n, lambda n=n: check_song(tool, folder, n, args.update)) for n in SONGS if not args.only or n == args.only]
