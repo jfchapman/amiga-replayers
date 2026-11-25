@@ -1,7 +1,8 @@
 replay_library(tfmxreplay PREFIX TFMX TOOLS tfmx
 	SOURCES
+		../common/output.cpp
 		src/module.cpp
-		src/paula.cpp
+		src/tfmx_paula.cpp
 		src/replayer.cpp
 		src/tfmxreplay.cpp
 		src/variant.cpp

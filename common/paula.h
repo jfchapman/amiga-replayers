@@ -1,14 +1,13 @@
-// SoundMonReplay: the Amiga's sound chip, Paula, as far as SoundMon uses it.
+// The Amiga's sound chip, Paula, as far as SoundMon and Hippel songs use it. (TFMX has its own: it also needs
+// delayed starts, audio interrupts and its software mixer, all the way through.)
 #pragma once
 
 #include <cstdint>
 #include <vector>
 
-#include "soundmonreplay.h"
+#include "output.h"
 
-namespace smon {
-
-const double kPaulaClock = 3546895.0;  // PAL colour clock, Hz
+namespace amiga {
 
 struct Channel {
 	// Registers, as the replayer writes them. lc is a byte offset into the memory.
@@ -34,14 +33,17 @@ class Paula {
 public:
 	void reset();
 	void set_memory(const std::vector<uint8_t> *memory) { mem_ = memory; }
-	void set_output(int sample_rate, smon_interpolation interpolation, int ramp_us, int separation, float gain,
-	                smon_amiga_model model);
-	void set_led(bool on) { led_ = on; }
+	void set_output(int sample_rate, Interpolation interpolation, int ramp_us, int separation, float gain, Model model);
+	void set_led(bool on) { output_.set_led(on); }
 
 	Channel &channel(int n) { return ch_[n]; }
 
 	void dma_on(int n);
 	void dma_off(int n);
+
+	// Goes over to the block at lc at once, if it hasn't got there by itself, with next_lc to follow.
+	// For Hippel's 7-voice mix, whose blocks are exactly one tick long.
+	void stream(int n, uint32_t lc, uint16_t len, uint32_t next_lc, uint16_t next_len);
 
 	// Mixes 'frames' stereo frames, added into out (left, right interleaved).
 	void render(float *out, int frames);
@@ -54,7 +56,6 @@ private:
 	void next_block(Channel &c);
 	void step(Channel &c, double samples);
 	float voice_sample(const Channel &c) const;
-	float filter(int side, float x);
 
 	Channel ch_[4];
 	struct Tail {
@@ -64,21 +65,11 @@ private:
 	Tail tails_[4];  // cut voices fading out (anti-click)
 	const std::vector<uint8_t> *mem_ = nullptr;
 	int rate_ = 44100;
-	smon_interpolation interp_ = SMON_INTERPOLATION_NONE;
+	Interpolation interp_ = Interpolation::None;
 	float ramp_step_ = 0;  // volume units per output frame, 0 = no ramping
-	float sep_ = 1.0f;
-	float gain_ = 1.0f;
 	unsigned mask_ = 0xF;
 	bool heard(int n) const { return (mask_ >> n) & 1; }
-
-	// The output filters, per side: the fixed one-pole low-pass, then the two-pole LED filter.
-	double fixed_coef_ = 0;  // 0 = off
-	bool led_ = false;
-	double led_b0_ = 0, led_a1_ = 0, led_a2_ = 0;
-	struct FilterState {
-		double fixed = 0, led1 = 0, led2 = 0;
-	};
-	FilterState filter_[2];
+	Output output_;
 };
 
-}  // namespace smon
+}  // namespace amiga

@@ -12,12 +12,13 @@
 
 #include "module.h"
 #include "paula.h"
+#include "playback.h"
 #include "replayer.h"
 
 namespace {
 
 // One tick is one PAL frame: 313 lines of 227 colour clocks.
-const double kTickSeconds = 313.0 * 227.0 / smon::kPaulaClock;
+const double kTickSeconds = 313.0 * 227.0 / amiga::kPaulaClock;
 const int kMaxTicks = int(30 * 60 / kTickSeconds);  // 30 minutes
 
 struct Subsong {
@@ -108,19 +109,15 @@ Subsong analyse(const smon::Module &m, int start, std::set<int> &visited) {
 struct smon_module {
 	smon::Module song;
 	smon::Replayer *replayer = nullptr;
-	smon::Paula paula;
+	amiga::Paula paula;
 	smon_settings settings;
 	std::vector<Subsong> subsongs;
 	int current = 0;
 
 	std::vector<smon::Write> writes;
 	long long ticks_done = 0;     // ticks played since the start of the subsong
-	double tick_frames_left = 0;  // output frames left in the current tick
 	double frames_per_tick = 0;
-	long long frames_done = 0;
-	long long end_frame = -1;     // where playback stops, -1 = never
-	long long fade_from = -1;     // where the fade-out starts
-	std::vector<float> mix;
+	amiga::Playback playback;
 
 	~smon_module() { delete replayer; }
 };
@@ -157,17 +154,6 @@ void smon_default_settings(smon_settings *s) {
 	s->fade_seconds = 0;
 }
 
-static bool valid(const smon_settings *s) {
-	return s->sample_rate >= 8000 && s->sample_rate <= 192000 && s->stereo_separation >= 0 &&
-	       s->stereo_separation <= 100 && s->volume_ramping >= 0 && s->loop_count >= -1 && s->gain >= 0 &&
-	       s->fade_seconds >= 0;
-}
-
-static void apply_output(smon_module *m) {
-	const smon_settings &s = m->settings;
-	m->paula.set_output(s.sample_rate, s.interpolation, s.volume_ramping, s.stereo_separation, s.gain, s.amiga_model);
-}
-
 static double play_seconds(const smon_module *m, const Subsong &s) {
 	if (s.ticks < 0)
 		return -1;
@@ -188,17 +174,11 @@ int smon_select_subsong(smon_module *m, int index) {
 	m->replayer->start(s.start_step);
 	m->paula.reset();
 	m->paula.set_memory(&m->replayer->memory());
-	apply_output(m);
+	amiga::set_output(m->paula, m->settings);
 	m->paula.set_led(m->settings.led_filter == SMON_LED_ON);
 	m->ticks_done = 0;
-	m->tick_frames_left = 0;
-	m->frames_done = 0;
 	m->frames_per_tick = kTickSeconds * m->settings.sample_rate;
-	const double secs = play_seconds(m, s);
-	m->end_frame = secs < 0 ? -1 : (long long)(secs * m->settings.sample_rate);
-	m->fade_from = (s.looped && m->settings.fade_seconds > 0 && m->end_frame >= 0)
-	                   ? m->end_frame - (long long)(m->settings.fade_seconds * m->settings.sample_rate)
-	                   : -1;
+	m->playback.start(m->settings.sample_rate, play_seconds(m, s), s.looped ? m->settings.fade_seconds : 0);
 	return 0;
 }
 
@@ -215,7 +195,7 @@ smon_module *smon_open(const void *data, size_t size, const smon_settings *setti
 		return nullptr;
 	}
 	if (settings) {
-		if (!valid(settings)) {
+		if (!amiga::valid_settings(settings)) {
 			delete m;
 			err = SMON_ERROR_ARGUMENT;
 			return nullptr;
@@ -294,7 +274,7 @@ static void run_tick(smon_module *m) {
 	m->writes.clear();
 	m->replayer->tick(m->writes);
 	for (const smon::Write &w : m->writes) {
-		smon::Channel &c = m->paula.channel(w.channel);
+		amiga::Channel &c = m->paula.channel(w.channel);
 		switch (w.reg) {
 		case smon::Reg::LC:
 			c.lc = w.value;
@@ -324,48 +304,16 @@ static void run_tick(smon_module *m) {
 size_t smon_render_float(smon_module *m, float *buffer, size_t frames) {
 	if (!m || !buffer)
 		return 0;
-	size_t done = 0;
-	while (done < frames) {
-		if (m->end_frame >= 0 && m->frames_done >= m->end_frame)
-			break;
-		if (m->tick_frames_left < 1) {
-			run_tick(m);
-			m->tick_frames_left += m->frames_per_tick;
-		}
-		size_t n = std::min<size_t>(frames - done, size_t(m->tick_frames_left));
-		if (m->end_frame >= 0)
-			n = std::min<size_t>(n, size_t(m->end_frame - m->frames_done));
-		if (n == 0)
-			n = 1;
-		float *out = buffer + 2 * done;
-		std::fill(out, out + 2 * n, 0.0f);
-		m->paula.render(out, int(n));
-		if (m->fade_from >= 0) {
-			const double span = double(m->end_frame - m->fade_from);
-			for (size_t i = 0; i < n; i++) {
-				const long long f = m->frames_done + (long long)i;
-				if (f > m->fade_from) {
-					const float g = float(std::max(0.0, 1.0 - double(f - m->fade_from) / span));
-					out[2 * i] *= g;
-					out[2 * i + 1] *= g;
-				}
-			}
-		}
-		m->tick_frames_left -= double(n);
-		m->frames_done += (long long)n;
-		done += n;
-	}
-	return done;
+	return m->playback.render(m->paula, buffer, frames, [m] {
+		run_tick(m);
+		return m->frames_per_tick;
+	});
 }
 
 size_t smon_render_s16(smon_module *m, int16_t *buffer, size_t frames) {
 	if (!m || !buffer)
 		return 0;
-	m->mix.resize(frames * 2);
-	const size_t n = smon_render_float(m, m->mix.data(), frames);
-	for (size_t i = 0; i < 2 * n; i++)
-		buffer[i] = int16_t(std::lround(std::clamp(m->mix[i], -1.0f, 1.0f) * 32767.0f));
-	return n;
+	return m->playback.render_s16(buffer, frames, [m](float *out, size_t n) { return smon_render_float(m, out, n); });
 }
 
 double smon_seek(smon_module *m, double seconds) {
@@ -374,26 +322,25 @@ double smon_seek(smon_module *m, double seconds) {
 	smon_select_subsong(m, m->current);
 	const long long target = (long long)(std::max(0.0, seconds) / kTickSeconds);
 	while (m->ticks_done < target) {
-		if (m->end_frame >= 0 && double(m->ticks_done + 1) * m->frames_per_tick > double(m->end_frame))
+		if (m->playback.past_end(double(m->ticks_done + 1) * m->frames_per_tick))
 			break;
 		run_tick(m);
 	}
-	m->frames_done = (long long)(double(m->ticks_done) * m->frames_per_tick);
-	m->tick_frames_left = 0;
+	m->playback.skip_to((long long)(double(m->ticks_done) * m->frames_per_tick));
 	return m->ticks_done * kTickSeconds;
 }
 
 double smon_position(const smon_module *m) {
-	return m ? double(m->frames_done) / m->settings.sample_rate : 0;
+	return m ? double(m->playback.frames()) / m->settings.sample_rate : 0;
 }
 
 int smon_set_settings(smon_module *m, const smon_settings *settings) {
-	if (!m || !settings || !valid(settings))
+	if (!m || !settings || !amiga::valid_settings(settings))
 		return -1;
 	const int rate = m->settings.sample_rate;
 	m->settings = *settings;
 	m->settings.sample_rate = rate;
-	apply_output(m);
+	amiga::set_output(m->paula, m->settings);
 	if (m->settings.led_filter != SMON_LED_SONG)
 		m->paula.set_led(m->settings.led_filter == SMON_LED_ON);
 	return 0;

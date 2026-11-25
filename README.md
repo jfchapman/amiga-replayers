@@ -41,8 +41,8 @@ libraries and a CMake package, so another project can use `find_package(AmigaRep
 
 Without CMake, with GNU make and gcc or clang: `make` (static libraries and tools) or `make shared`.
 
-To compile a library's sources in your own project, add its `src` files, with its `include` and `src` folders and the
-`common` folder on the include path.
+To compile a library's sources in your own project, add its `src` files and `common/*.cpp`, with its `include` and `src`
+folders and `common` on the include path.
 
 For the web, `build-wasm.cmd` builds `build\wasm\tfmxreplay.wasm`, `soundmonreplay.wasm` and `hippelreplay.wasm` with
 [Emscripten](https://emscripten.org/) (run it from the repository's root, with `em++` on the path). They need no

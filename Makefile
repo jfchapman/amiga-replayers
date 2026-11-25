@@ -14,9 +14,9 @@ CFLAGS += -std=c99
 AR ?= ar
 
 LIBS = tfmxreplay soundmonreplay hippelreplay
-TFMX = $(wildcard tfmxreplay/src/*.cpp)
-SOUNDMON = $(wildcard soundmonreplay/src/*.cpp)
-HIPPEL = $(wildcard hippelreplay/src/*.cpp)
+TFMX = $(wildcard tfmxreplay/src/*.cpp) common/output.cpp
+SOUNDMON = $(wildcard soundmonreplay/src/*.cpp) common/output.cpp common/paula.cpp
+HIPPEL = $(wildcard hippelreplay/src/*.cpp) common/output.cpp common/paula.cpp
 TOOLS = tfmxrender tfmxtrace smonrender smontrace hippelrender hippeltrace
 
 all: $(LIBS:%=lib%.a) $(TOOLS)

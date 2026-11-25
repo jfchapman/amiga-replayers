@@ -4,11 +4,12 @@
 #include <cstdint>
 #include <vector>
 
+#include "output.h"
 #include "tfmxreplay.h"
 
 namespace tfmx {
 
-const double kPaulaClock = 3546895.0;  // PAL colour clock, Hz
+using amiga::kPaulaClock;
 
 struct Channel {
 	// Registers, as the replayer writes them. lc is a byte offset into smpl.
@@ -89,7 +90,6 @@ private:
 	void next_block(Channel &c);
 	void step(Channel &c, double samples);
 	float voice_sample(Channel &c);
-	float filter(int side, float x);
 	float mix_sample(double pos) const;
 
 	std::vector<Channel> ch_;
@@ -102,8 +102,6 @@ private:
 	int rate_ = 44100;
 	tfmx_interpolation interp_ = TFMX_INTERPOLATION_NONE;
 	float ramp_step_ = 0;  // volume units per output frame, 0 = no ramping
-	float sep_ = 1.0f;
-	float gain_ = 1.0f;
 	unsigned mask_ = 0xFF;
 	bool heard(size_t n) const { return (mask_ >> n) & 1; }
 	bool seven_ = false;
@@ -113,14 +111,7 @@ private:
 	double mix_play_ = 0;
 	int mix_period_ = 199;
 
-	// The output filters, per side: the fixed one-pole low-pass, then the two-pole LED filter.
-	double fixed_coef_ = 0;  // 0 = off
-	bool led_ = false;
-	double led_b0_ = 0, led_a1_ = 0, led_a2_ = 0;
-	struct FilterState {
-		double fixed = 0, led1 = 0, led2 = 0;
-	};
-	FilterState filter_[2];
+	amiga::Output output_;
 };
 
 }  // namespace tfmx

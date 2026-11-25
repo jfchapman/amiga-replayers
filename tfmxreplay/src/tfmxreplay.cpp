@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "module.h"
-#include "paula.h"
+#include "tfmx_paula.h"
 #include "replayer.h"
 #include "variant.h"
 

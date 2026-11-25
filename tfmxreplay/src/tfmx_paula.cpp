@@ -4,7 +4,7 @@
 // reloads whatever lc/len hold at that moment and carries on, so register changes made while a
 // voice plays take effect at the next loop point. Starting DMA latches lc/len at once. Both
 // events raise the voice's audio interrupt, which the replayer counts for macro 1A.
-#include "paula.h"
+#include "tfmx_paula.h"
 
 #include <algorithm>
 #include <cmath>
@@ -13,15 +13,7 @@ namespace tfmx {
 
 namespace {
 
-const int kMinPeriod = 113;
-
-const double kPi = 3.14159265358979323846;
-
-// Output filter corners in Hz: the commonly quoted measurements of the machines.
-const double kA500Corner = 4900;
-const double kA1200Corner = 28867;
-const double kLedCorner = 3275;
-const double kLedQ = 0.7071;  // Butterworth
+using amiga::kMinPeriod;
 
 uint32_t bytes_of(uint16_t len) { return (len ? uint32_t(len) : 0x10000u) * 2; }
 
@@ -39,28 +31,17 @@ void Paula::reset(int channels) {
 	mix_back_.clear();
 	mix_old_.clear();
 	mix_play_ = 0;
-	filter_[0] = filter_[1] = FilterState();
+	output_.reset();
 }
 
 void Paula::set_output(int sample_rate, tfmx_interpolation interpolation, int ramp_us, int separation, float gain,
                        tfmx_amiga_model model, bool led_filter) {
-	// One pole, matched to the analogue filter.
-	const double corner = model == TFMX_AMIGA_A500 ? kA500Corner : model == TFMX_AMIGA_A1200 ? kA1200Corner : 0;
-	fixed_coef_ = corner > 0 ? 1 - std::exp(-2 * kPi * corner / sample_rate) : 0;
-	// Two poles, by the bilinear transform with the corner prewarped.
-	led_ = led_filter;
-	const double k = std::tan(kPi * kLedCorner / sample_rate);
-	const double norm = 1 / (1 + k / kLedQ + k * k);
-	led_b0_ = k * k * norm;
-	led_a1_ = 2 * (k * k - 1) * norm;
-	led_a2_ = (1 - k / kLedQ + k * k) * norm;
-
+	output_.set(sample_rate, static_cast<amiga::Model>(model), separation, gain);
+	output_.set_led(led_filter);
 	rate_ = sample_rate;
 	interp_ = interpolation;
 	// A full-scale volume change (64) takes ramp_us microseconds.
 	ramp_step_ = ramp_us > 0 ? float(64.0 * 1e6 / (double(ramp_us) * sample_rate)) : 0.0f;
-	sep_ = std::clamp(separation, 0, 100) / 100.0f;
-	gain_ = gain;
 }
 
 void Paula::dma_on(int n, double delay) {
@@ -155,12 +136,7 @@ float Paula::voice_sample(Channel &c) {
 	const float s1 = sample_at(c, i + 1);
 	if (interp_ == TFMX_INTERPOLATION_LINEAR)
 		return s0 + (s1 - s0) * t;
-	// Cubic (Catmull-Rom) through the previous sample, s0, s1, s2.
-	const float sm = i ? sample_at(c, i - 1) : c.prev, s2 = sample_at(c, i + 2);
-	const float a = -0.5f * sm + 1.5f * s0 - 1.5f * s1 + 0.5f * s2;
-	const float b = sm - 2.5f * s0 + 2.0f * s1 - 0.5f * s2;
-	const float d = -0.5f * sm + 0.5f * s1;
-	return ((a * t + b) * t + d) * t + s0;
+	return amiga::cubic(i ? sample_at(c, i - 1) : c.prev, s0, s1, sample_at(c, i + 2), t);
 }
 
 void Paula::mix_latch(int n, int period, int volume) {
@@ -223,24 +199,7 @@ float Paula::mix_sample(double pos) const {
 	return j < mix_back_.size() ? float(mix_back_[j]) / 128.0f : 0.0f;
 }
 
-float Paula::filter(int side, float x) {
-	FilterState &f = filter_[side];
-	double y = x;
-	if (fixed_coef_ > 0) {
-		f.fixed += fixed_coef_ * (y - f.fixed);
-		y = f.fixed;
-	}
-	if (led_) {
-		const double in = y;
-		y = led_b0_ * in + f.led1;
-		f.led1 = 2 * led_b0_ * in - led_a1_ * y + f.led2;
-		f.led2 = led_b0_ * in - led_a2_ * y;
-	}
-	return float(y);
-}
-
 void Paula::render(float *out, int frames) {
-	const float base = 0.5f * gain_;  // two full-scale voices per side reach 1.0
 	for (int f = 0; f < frames; f++) {
 		float side[2] = {0, 0};
 		for (size_t n = 0; n < ch_.size(); n++) {
@@ -290,24 +249,15 @@ void Paula::render(float *out, int frames) {
 			float x = mix_sample(p);
 			if (interp_ != TFMX_INTERPOLATION_NONE) {
 				const float t = float(p - std::floor(p)), s1 = mix_sample(p + 1);
-				if (interp_ == TFMX_INTERPOLATION_LINEAR) {
+				if (interp_ == TFMX_INTERPOLATION_LINEAR)
 					x += (s1 - x) * t;
-				} else {
-					const float sm = mix_sample(p - 1), s2 = mix_sample(p + 2);
-					const float a = -0.5f * sm + 1.5f * x - 1.5f * s1 + 0.5f * s2;
-					const float b = sm - 2.5f * x + 2.0f * s1 - 0.5f * s2;
-					const float d = -0.5f * sm + 0.5f * s1;
-					x = ((a * t + b) * t + d) * t + x;
-				}
+				else
+					x = amiga::cubic(mix_sample(p - 1), x, s1, mix_sample(p + 2), t);
 			}
 			side[0] += x;
 			mix_play_ += kPaulaClock / mix_period_ / rate_;
 		}
-		// The filters are on the two analogue outputs, so they come before the stereo separation.
-		const float l = filter(0, side[0] * base), r = filter(1, side[1] * base);
-		const float mix = 0.5f + 0.5f * sep_, cross = 0.5f - 0.5f * sep_;
-		out[2 * f] += l * mix + r * cross;
-		out[2 * f + 1] += r * mix + l * cross;
+		output_.add(side[0], side[1], out + 2 * f);
 	}
 }
 

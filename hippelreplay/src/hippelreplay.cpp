@@ -11,6 +11,7 @@
 #include "mixer.h"
 #include "module.h"
 #include "paula.h"
+#include "playback.h"
 #include "replayer.h"
 
 namespace {
@@ -53,7 +54,7 @@ Subsong analyse(const hippel::Module &m, int number) {
 	double now = 0;
 	for (int t = 0; now < kMaxSeconds; t++) {
 		times.push_back(now);
-		const double length = r.tick_clocks() / hippel::kPaulaClock;
+		const double length = r.tick_clocks() / amiga::kPaulaClock;
 		if (length <= 0)
 			return Subsong();
 		r.tick(out);
@@ -115,7 +116,7 @@ struct hippel_module {
 	hippel::Module song;
 	hippel::Replayer *replayer = nullptr;
 	hippel::Mixer *mixer = nullptr;  // 7 voices
-	hippel::Paula paula;
+	amiga::Paula paula;
 	std::vector<uint8_t> memory;  // 7 voices: the file and the mix buffers
 	hippel_settings settings;
 	std::vector<Subsong> subsongs;
@@ -131,11 +132,7 @@ struct hippel_module {
 	int buffer_no = 0;
 
 	double seconds_done = 0;      // time played since the start of the subsong, in whole ticks
-	double tick_frames_left = 0;  // output frames left in the current tick
-	long long frames_done = 0;
-	long long end_frame = -1;     // where playback stops, -1 = never
-	long long fade_from = -1;     // where the fade-out starts
-	std::vector<float> mix;
+	amiga::Playback playback;
 
 	~hippel_module() {
 		delete mixer;
@@ -178,17 +175,6 @@ void hippel_default_settings(hippel_settings *s) {
 	s->fade_seconds = 0;
 }
 
-static bool valid(const hippel_settings *s) {
-	return s->sample_rate >= 8000 && s->sample_rate <= 192000 && s->stereo_separation >= 0 &&
-	       s->stereo_separation <= 100 && s->volume_ramping >= 0 && s->loop_count >= -1 && s->gain >= 0 &&
-	       s->fade_seconds >= 0;
-}
-
-static void apply_output(hippel_module *m) {
-	const hippel_settings &s = m->settings;
-	m->paula.set_output(s.sample_rate, s.interpolation, s.volume_ramping, s.stereo_separation, s.gain, s.amiga_model);
-}
-
 static double play_seconds(const hippel_module *m, const Subsong &s) {
 	if (s.ticks < 0)
 		return -1;
@@ -204,7 +190,7 @@ static double play_seconds(const hippel_module *m, const Subsong &s) {
 static void play_ahead(hippel_module *m) {
 	hippel_module::Tick &t = m->next;
 	t.words = m->replayer->mix_words();
-	t.seconds = m->replayer->tick_clocks() / hippel::kPaulaClock;
+	t.seconds = m->replayer->tick_clocks() / amiga::kPaulaClock;
 	m->replayer->tick(t.out);
 	m->buffer_no = (m->buffer_no + 1) % kMixBuffers;
 	t.buffer = uint32_t(m->song.file.size()) + kMixGap + kMixBytes * uint32_t(m->buffer_no);
@@ -219,20 +205,14 @@ int hippel_select_subsong(hippel_module *m, int index) {
 	m->replayer->start(s.song);
 	m->paula.reset();
 	m->paula.set_memory(m->mixer ? &m->memory : &m->song.file);
-	apply_output(m);
+	amiga::set_output(m->paula, m->settings);
 	m->paula.set_led(m->settings.led_filter == HIPPEL_LED_ON);
 	if (m->mixer) {
 		m->mixer->reset();
 		play_ahead(m);
 	}
 	m->seconds_done = 0;
-	m->tick_frames_left = 0;
-	m->frames_done = 0;
-	const double secs = play_seconds(m, s);
-	m->end_frame = secs < 0 ? -1 : (long long)(secs * m->settings.sample_rate);
-	m->fade_from = (s.looped && m->settings.fade_seconds > 0 && m->end_frame >= 0)
-	                   ? m->end_frame - (long long)(m->settings.fade_seconds * m->settings.sample_rate)
-	                   : -1;
+	m->playback.start(m->settings.sample_rate, play_seconds(m, s), s.looped ? m->settings.fade_seconds : 0);
 	return 0;
 }
 
@@ -249,7 +229,7 @@ hippel_module *hippel_open(const void *data, size_t size, const hippel_settings 
 		return nullptr;
 	}
 	if (settings) {
-		if (!valid(settings)) {
+		if (!amiga::valid_settings(settings)) {
 			delete m;
 			err = HIPPEL_ERROR_ARGUMENT;
 			return nullptr;
@@ -356,19 +336,19 @@ static double run_tick(hippel_module *m) {
 		std::copy(now.out, now.out + 7, out);
 		seconds = now.seconds;
 		play_ahead(m);
-		hippel::Channel &c = m->paula.channel(3);
+		amiga::Channel &c = m->paula.channel(3);
 		c.per = uint16_t(m->song.mix_period);
 		c.vol = 64;
 		m->paula.stream(3, now.buffer, uint16_t(now.words), m->next.buffer, uint16_t(m->next.words));
 	} else {
-		seconds = m->replayer->tick_clocks() / hippel::kPaulaClock;
+		seconds = m->replayer->tick_clocks() / amiga::kPaulaClock;
 		m->replayer->tick(out);
 	}
 	for (int n = 0; n < (m->mixer ? 3 : 4); n++) {
 		const hippel::VoiceOut &o = out[n];
 		if (!o.active)
 			continue;
-		hippel::Channel &c = m->paula.channel(n);
+		amiga::Channel &c = m->paula.channel(n);
 		c.per = o.per;
 		c.vol = o.vol & 0x7F;
 		if (o.trigger || !o.dma)
@@ -388,47 +368,15 @@ static double run_tick(hippel_module *m) {
 size_t hippel_render_float(hippel_module *m, float *buffer, size_t frames) {
 	if (!m || !buffer)
 		return 0;
-	size_t done = 0;
-	while (done < frames) {
-		if (m->end_frame >= 0 && m->frames_done >= m->end_frame)
-			break;
-		if (m->tick_frames_left < 1) {
-			m->tick_frames_left += run_tick(m) * m->settings.sample_rate;
-		}
-		size_t n = std::min<size_t>(frames - done, size_t(m->tick_frames_left));
-		if (m->end_frame >= 0)
-			n = std::min<size_t>(n, size_t(m->end_frame - m->frames_done));
-		if (n == 0)
-			n = 1;
-		float *out = buffer + 2 * done;
-		std::fill(out, out + 2 * n, 0.0f);
-		m->paula.render(out, int(n));
-		if (m->fade_from >= 0) {
-			const double span = double(m->end_frame - m->fade_from);
-			for (size_t i = 0; i < n; i++) {
-				const long long f = m->frames_done + (long long)i;
-				if (f > m->fade_from) {
-					const float g = float(std::max(0.0, 1.0 - double(f - m->fade_from) / span));
-					out[2 * i] *= g;
-					out[2 * i + 1] *= g;
-				}
-			}
-		}
-		m->tick_frames_left -= double(n);
-		m->frames_done += (long long)n;
-		done += n;
-	}
-	return done;
+	return m->playback.render(m->paula, buffer, frames, [m] {
+		return run_tick(m) * m->settings.sample_rate;
+	});
 }
 
 size_t hippel_render_s16(hippel_module *m, int16_t *buffer, size_t frames) {
 	if (!m || !buffer)
 		return 0;
-	m->mix.resize(frames * 2);
-	const size_t n = hippel_render_float(m, m->mix.data(), frames);
-	for (size_t i = 0; i < 2 * n; i++)
-		buffer[i] = int16_t(std::lround(std::clamp(m->mix[i], -1.0f, 1.0f) * 32767.0f));
-	return n;
+	return m->playback.render_s16(buffer, frames, [m](float *out, size_t n) { return hippel_render_float(m, out, n); });
 }
 
 double hippel_seek(hippel_module *m, double seconds) {
@@ -436,28 +384,27 @@ double hippel_seek(hippel_module *m, double seconds) {
 		return 0;
 	hippel_select_subsong(m, m->current);
 	for (;;) {
-		const double length = m->mixer ? m->next.seconds : m->replayer->tick_clocks() / hippel::kPaulaClock;
+		const double length = m->mixer ? m->next.seconds : m->replayer->tick_clocks() / amiga::kPaulaClock;
 		const double end = m->seconds_done + length;
-		if (end > seconds + 1e-9 || (m->end_frame >= 0 && end * m->settings.sample_rate > double(m->end_frame)))
+		if (end > seconds + 1e-9 || m->playback.past_end(end * m->settings.sample_rate))
 			break;
 		run_tick(m);
 	}
-	m->frames_done = (long long)(m->seconds_done * m->settings.sample_rate);
-	m->tick_frames_left = 0;
+	m->playback.skip_to((long long)(m->seconds_done * m->settings.sample_rate));
 	return m->seconds_done;
 }
 
 double hippel_position(const hippel_module *m) {
-	return m ? double(m->frames_done) / m->settings.sample_rate : 0;
+	return m ? double(m->playback.frames()) / m->settings.sample_rate : 0;
 }
 
 int hippel_set_settings(hippel_module *m, const hippel_settings *settings) {
-	if (!m || !settings || !valid(settings))
+	if (!m || !settings || !amiga::valid_settings(settings))
 		return -1;
 	const int rate = m->settings.sample_rate;
 	m->settings = *settings;
 	m->settings.sample_rate = rate;
-	apply_output(m);
+	amiga::set_output(m->paula, m->settings);
 	m->paula.set_led(m->settings.led_filter == HIPPEL_LED_ON);
 	return 0;
 }

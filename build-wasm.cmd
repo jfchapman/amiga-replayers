@@ -3,9 +3,9 @@ rem Builds build\wasm\*.wasm, one per library, with Emscripten. Run it from the 
 rem (emsdk_env.bat sets that up). Each is a single file that needs no JavaScript from Emscripten.
 setlocal
 if not exist build\wasm mkdir build\wasm
-call :build tfmxreplay "tfmxreplay/src/module.cpp tfmxreplay/src/paula.cpp tfmxreplay/src/replayer.cpp tfmxreplay/src/tfmxreplay.cpp tfmxreplay/src/variant.cpp" "_tfmx_version,_tfmx_wasm_open,_tfmx_wasm_configure,_tfmx_close,_tfmx_subsong_index,_tfmx_select_subsong,_tfmx_render_float,_tfmx_seek" || exit /b 1
-call :build soundmonreplay "soundmonreplay/src/module.cpp soundmonreplay/src/paula.cpp soundmonreplay/src/replayer.cpp soundmonreplay/src/soundmonreplay.cpp" "_smon_version,_smon_wasm_open,_smon_wasm_configure,_smon_close,_smon_subsong_count,_smon_select_subsong,_smon_render_float,_smon_seek" || exit /b 1
-call :build hippelreplay "hippelreplay/src/mixer.cpp hippelreplay/src/module.cpp hippelreplay/src/paula.cpp hippelreplay/src/replayer.cpp hippelreplay/src/hippelreplay.cpp" "_hippel_version,_hippel_wasm_open,_hippel_wasm_configure,_hippel_close,_hippel_subsong_count,_hippel_select_subsong,_hippel_render_float,_hippel_seek" || exit /b 1
+call :build tfmxreplay "common/output.cpp tfmxreplay/src/module.cpp tfmxreplay/src/tfmx_paula.cpp tfmxreplay/src/replayer.cpp tfmxreplay/src/tfmxreplay.cpp tfmxreplay/src/variant.cpp" "_tfmx_version,_tfmx_wasm_open,_tfmx_wasm_configure,_tfmx_close,_tfmx_subsong_index,_tfmx_select_subsong,_tfmx_render_float,_tfmx_seek" || exit /b 1
+call :build soundmonreplay "soundmonreplay/src/module.cpp common/output.cpp common/paula.cpp soundmonreplay/src/replayer.cpp soundmonreplay/src/soundmonreplay.cpp" "_smon_version,_smon_wasm_open,_smon_wasm_configure,_smon_close,_smon_subsong_count,_smon_select_subsong,_smon_render_float,_smon_seek" || exit /b 1
+call :build hippelreplay "hippelreplay/src/mixer.cpp hippelreplay/src/module.cpp common/output.cpp common/paula.cpp hippelreplay/src/replayer.cpp hippelreplay/src/hippelreplay.cpp" "_hippel_version,_hippel_wasm_open,_hippel_wasm_configure,_hippel_close,_hippel_subsong_count,_hippel_select_subsong,_hippel_render_float,_hippel_seek" || exit /b 1
 exit /b 0
 
 rem :build <library> "<sources>" "<exported functions>"
