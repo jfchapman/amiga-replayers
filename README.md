@@ -19,8 +19,8 @@ it. Use that, or a single one of the others if it's all you need. They have a lo
   A1200 or none, plus the LED filter), anti-click volume ramping, loop count, fade-out, gain.
 - Clean-room replayers: written from descriptions of the formats, and checked tick by tick against the original
   replayers running in an Amiga emulator, without reading any replayer's code. Each README says how closely they match.
-
-For an example web-based player that uses them, please visit [modplayer](https://mods.chapzero.com).
+- Also builds for the web as WebAssembly (wasm). For an example web-based player, please visit
+  [modplayer](https://mods.chapzero.com).
 
 ## Building
 
